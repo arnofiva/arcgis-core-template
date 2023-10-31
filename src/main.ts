@@ -12,7 +12,7 @@ import "@esri/calcite-components/dist/components/calcite-loader";
 
 // IdentityManager.registerOAuthInfos([
 //   new OAuthInfo({
-//     appId: "",
+//     appId: "KojZjH6glligLidj",
 //     popup: true,
 //     popupCallbackUrl: `${document.location.origin}${document.location.pathname}oauth-callback-api.html`,
 //   }),
@@ -36,6 +36,9 @@ const view = new SceneView({
 
 map.when().then(() => {
   map.ground.surfaceColor = new Color([220, 220, 220]);
+
+  const loader = document.getElementById("loader");
+  loader;
 });
 
 map.loadAll().then(() => {
