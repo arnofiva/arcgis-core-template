@@ -63,7 +63,7 @@ Once the previous steps have been completed, you can repeat the following every 
 npm run build
 cd dist/
 git add .
-git commit -am '🎉'
+git commit -am 'Deploy latest version'
 git push origin gh-pages
 cd ../
 ```
