@@ -142,8 +142,12 @@ class PlayerStore extends Accessor {
     };
 
     try {
-      // Show the start animation dialog for at least 3s while we reset the view
-      await Promise.all([this.reset(), timeout(2000)]);
+      // Show the start animation dialog for at least 3s while we reset the view if we reached the last slide
+      if (this.canForward) {
+        await timeout(2000);
+      } else {
+        await Promise.all([this.reset(), timeout(2000)]);
+      }
       await timeout(1000);
 
       // Wait for at least 1s after hiding the start animation dialog and if necessary, until the view has udpated
