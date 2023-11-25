@@ -230,7 +230,7 @@ class Player extends Widget<PlayerProperties> {
           </calcite-label>
 
           <calcite-label layout="inline-space-between">
-            Wait for view to udpate
+            Wait for view to update
             <calcite-switch
               onCalciteSwitchChange={(e: any) => {
                 this.store.waitForUpdates = !this.store.waitForUpdates;

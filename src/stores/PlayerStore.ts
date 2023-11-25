@@ -150,7 +150,7 @@ class PlayerStore extends Accessor {
       }
       await timeout(1000);
 
-      // Wait for at least 1s after hiding the start animation dialog and if necessary, until the view has udpated
+      // Wait for at least 1s after hiding the start animation dialog and if necessary, until the view has updated
       if (animating) {
         this._state = "animating";
         await Promise.all([this.pauseFor(1000), timeout(1000)]);
