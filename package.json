@@ -1,7 +1,7 @@
 {
   "name": "arcgis-core-template",
   "version": "1.0.0",
-  "description": "ArcGIS API for JavaScript template using Vite and TypeScript",
+  "description": "ArcGIS Maps SDK for JavaScript template using Vite and TypeScript",
   "repository": {
     "type": "git",
     "url": "https://github.com/arnofiva/arcgis-core-template"

@@ -1,8 +1,8 @@
-# ArcGIS API for JavaScript template
+# ArcGIS Maps SDK for JavaScript template
 
 ## Prerequisites
 
-* Node.js 16.0+
+- Node.js 16.0+
 
 ## Run project locally
 
@@ -36,7 +36,7 @@ If you only copied the `main` branch, follow these steps to create an orphan `gh
 ```
 rm -rf dist
 git checkout --orphan gh-pages
-git rm -rf . 
+git rm -rf .
 git commit --allow-empty -m "Init empty branch"
 git push origin gh-pages
 ```
