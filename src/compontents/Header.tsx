@@ -22,7 +22,35 @@ class Header extends Widget<HeaderProperties> {
   @property()
   store: AppStore;
 
-  openScene() {
+  @property()
+  userMenuOpen = false;
+
+  constructor(props: HeaderProperties) {
+    super(props);
+
+    const viewContainer = props.store.view.container;
+
+    viewContainer.addEventListener("mousedown", this.closeUserMenu);
+
+    this.addHandles([
+      {
+        remove: () => {
+          viewContainer.removeEventListener("mousedown", this.closeUserMenu);
+        },
+      },
+    ]);
+  }
+
+  private closeUserMenu = () => {
+    this.userMenuOpen = false;
+  };
+
+  private signOut() {
+    this.store.userStore.signOut();
+    this.closeUserMenu();
+  }
+
+  private openScene() {
     const itemPageUrl = this.store.map.portalItem.itemPageUrl;
     if (itemPageUrl) {
       window.open(itemPageUrl, "new");
@@ -30,6 +58,8 @@ class Header extends Widget<HeaderProperties> {
   }
 
   render() {
+    const userMenuClass = this.userMenuOpen ? "" : "hide";
+
     return (
       <div>
         <calcite-navigation slot="header">
@@ -45,6 +75,18 @@ class Header extends Widget<HeaderProperties> {
 
           {this.renderUserProfile()}
         </calcite-navigation>
+        <calcite-menu
+          id="user-menu"
+          layout="vertical"
+          label="Application menu"
+          class={userMenuClass}
+        >
+          <calcite-menu-item
+            icon-start="sign-out"
+            text="Sign Out"
+            onclick={() => this.signOut()}
+          ></calcite-menu-item>
+        </calcite-menu>
       </div>
     );
   }
@@ -56,7 +98,10 @@ class Header extends Widget<HeaderProperties> {
       return (
         <calcite-navigation-user
           slot="user"
-          onclick={() => userStore.signOut()}
+          active={this.userMenuOpen}
+          onclick={() => {
+            this.userMenuOpen = !this.userMenuOpen;
+          }}
           thumbnail={user?.thumbnailUrl}
           full-name={user?.fullName}
           username={user?.username}
