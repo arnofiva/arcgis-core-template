@@ -4,6 +4,8 @@
 
 - Node.js 16.0+
 
+The template comes set up with Prettier for formatting. Take a look at their [editor integration docs](https://prettier.io/docs/en/editors) to integrate it into your development environment.
+
 ## Run project locally
 
 To start:
