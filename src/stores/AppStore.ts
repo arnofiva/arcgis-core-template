@@ -1,23 +1,19 @@
-import WebScene from "@arcgis/core/WebScene";
 import Accessor from "@arcgis/core/core/Accessor";
 import {
   property,
   subclass,
 } from "@arcgis/core/core/accessorSupport/decorators";
 import { whenOnce } from "@arcgis/core/core/reactiveUtils";
-import SceneView from "@arcgis/core/views/SceneView";
 import PlayerStore from "./PlayerStore";
+import SceneStore from "./SceneStore";
 import UserStore from "./UserStore";
 
-type AppStoreProperties = Pick<AppStore, "view">;
+type ActionMenu = "animation" | "settings";
 
-@subclass("arcgis-core-template.AppStore")
+@subclass()
 class AppStore extends Accessor {
-  @property({ aliasOf: "view.map" })
-  map: WebScene;
-
   @property({ constructOnly: true })
-  view: SceneView;
+  sceneStore = new SceneStore();
 
   @property({ constructOnly: true })
   userStore = new UserStore();
@@ -25,12 +21,15 @@ class AppStore extends Accessor {
   @property({ constructOnly: true })
   playerStore: PlayerStore;
 
-  constructor(props: AppStoreProperties) {
-    super(props);
+  @property()
+  selectedMenu: ActionMenu | null = null;
 
-    this.playerStore = new PlayerStore({ view: props.view });
+  constructor() {
+    super();
 
-    whenOnce(() => this.map).then(async (map) => {
+    this.playerStore = new PlayerStore({ sceneStore: this.sceneStore });
+
+    whenOnce(() => this.sceneStore.map).then(async (map) => {
       await map.load();
       document.title = map.portalItem.title;
 

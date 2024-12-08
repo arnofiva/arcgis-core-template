@@ -8,13 +8,17 @@ import { when, whenOnce } from "@arcgis/core/core/reactiveUtils";
 import SceneView from "@arcgis/core/views/SceneView";
 import Slide from "@arcgis/core/webscene/Slide";
 import { timeout } from "../utils";
+import SceneStore from "./SceneStore";
 
-type PlayerStoreProperties = Pick<PlayerStore, "view">;
+type PlayerStoreProperties = Pick<PlayerStore, "sceneStore">;
 
-@subclass("arcgis-core-template.PlayerStore")
+@subclass()
 class PlayerStore extends Accessor {
   @property({ constructOnly: true })
-  view: SceneView;
+  sceneStore: SceneStore;
+
+  @property({ aliasOf: "sceneStore.view" })
+  view: SceneView | null;
 
   @property()
   get state() {
@@ -42,15 +46,16 @@ class PlayerStore extends Accessor {
 
   @property()
   get fov() {
-    const camera = this.view.camera;
+    const camera = this.view?.camera;
     return (camera && camera.fov) || 0;
   }
   set fov(value: number) {
-    let camera = this.view.camera;
-    if (camera) {
-      camera = camera.clone();
-      camera.fov = value;
-      this.view.camera = camera;
+    const view = this.view;
+    const camera = view?.camera;
+    if (view && camera) {
+      const newCamera = camera.clone();
+      newCamera.fov = value;
+      view.camera = newCamera;
     }
   }
 
@@ -89,8 +94,8 @@ class PlayerStore extends Accessor {
 
     this.addHandles([
       when(
-        () => props.view.interacting,
-        () => this.stop()
+        () => this.view?.interacting,
+        () => this.stop(),
       ),
       { remove: () => window.removeEventListener("keydown", listener) },
     ]);
@@ -105,7 +110,7 @@ class PlayerStore extends Accessor {
 
     const waitConditions: Promise<any>[] = [];
     if (this.waitForUpdates) {
-      waitConditions.push(whenOnce(() => !this.view.updating));
+      waitConditions.push(whenOnce(() => !this.view?.updating));
     }
 
     switch (this.pauseBetweenSlides) {
@@ -133,7 +138,7 @@ class PlayerStore extends Accessor {
       if (animating) {
         this._state = "ready";
         animating = false;
-        const animation = this.view.animation;
+        const animation = this.view?.animation;
         if (animation) {
           animation.stop();
         }
@@ -188,8 +193,9 @@ class PlayerStore extends Accessor {
   }
 
   async goToSlide(slideIndex: number, animate = true) {
+    const view = this.view;
     const slides = this.slides;
-    if (!slides || slideIndex < 0 || slideIndex >= slides.length) {
+    if (!view || !slides || slideIndex < 0 || slideIndex >= slides.length) {
       return Promise.reject();
     }
 
@@ -206,7 +212,7 @@ class PlayerStore extends Accessor {
       console.log({ options });
     }
     try {
-      await slide.applyTo(this.view, options);
+      await slide.applyTo(view, options);
     } catch {
       this.stop();
     }

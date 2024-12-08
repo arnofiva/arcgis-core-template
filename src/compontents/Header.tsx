@@ -22,23 +22,29 @@ class Header extends Widget<HeaderProperties> {
   @property()
   store: AppStore;
 
+  @property({ aliasOf: "store.map.portalItem.title" })
+  title: string;
+
+  @property({ aliasOf: "store.map.portalItem.itemPageUrl" })
+  itemPageUrl: string;
+
   @property()
   userMenuOpen = false;
 
   constructor(props: HeaderProperties) {
     super(props);
 
-    const viewContainer = props.store.view.container;
+    // const viewContainer = props.store.view.container;
 
-    viewContainer.addEventListener("mousedown", this.closeUserMenu);
+    // viewContainer.addEventListener("mousedown", this.closeUserMenu);
 
-    this.addHandles([
-      {
-        remove: () => {
-          viewContainer.removeEventListener("mousedown", this.closeUserMenu);
-        },
-      },
-    ]);
+    // this.addHandles([
+    //   {
+    //     remove: () => {
+    //       viewContainer.removeEventListener("mousedown", this.closeUserMenu);
+    //     },
+    //   },
+    // ]);
   }
 
   private closeUserMenu = () => {
@@ -51,7 +57,7 @@ class Header extends Widget<HeaderProperties> {
   }
 
   private openScene() {
-    const itemPageUrl = this.store.map.portalItem.itemPageUrl;
+    const itemPageUrl = this.itemPageUrl;
     if (itemPageUrl) {
       window.open(itemPageUrl, "new");
     }
@@ -62,10 +68,10 @@ class Header extends Widget<HeaderProperties> {
 
     return (
       <div>
-        <calcite-navigation slot="header">
+        <calcite-navigation>
           <calcite-navigation-logo
             slot="logo"
-            heading={this.store.map.portalItem.title}
+            heading={this.title}
             description="ArcGIS Maps SDK for JavaScript"
             thumbnail="./icon-64.svg"
             onclick={() => {
@@ -92,8 +98,8 @@ class Header extends Widget<HeaderProperties> {
   }
 
   private renderUserProfile() {
-    const userStore = this.store.userStore;
-    if (userStore.authenticated) {
+    const userStore = this.store && this.store.userStore;
+    if (userStore && userStore.authenticated) {
       const user = userStore.user;
       return (
         <calcite-navigation-user

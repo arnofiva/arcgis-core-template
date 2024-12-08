@@ -35,10 +35,13 @@ class Player extends Widget<PlayerProperties> {
 
   @property()
   get quality() {
-    return this.store.view.qualityProfile;
+    return this.store.view?.qualityProfile || "medium";
   }
   set quality(quality: "high" | "medium" | "low") {
-    this.store.view.qualityProfile = quality;
+    const view = this.store.view;
+    if (view) {
+      view.qualityProfile = quality;
+    }
   }
 
   @property()
@@ -50,7 +53,7 @@ class Player extends Widget<PlayerProperties> {
         () => this.selectedSpeedFactor,
         (selectedSpeedFactor) => {
           this.store.speedFactor = SPEED_FACTORS[selectedSpeedFactor];
-        }
+        },
       ),
     ]);
   }
@@ -93,8 +96,6 @@ class Player extends Widget<PlayerProperties> {
 
           {this.renderStaging(animating ? "" : "hide")}
 
-          {this.renderSettings(animating ? "hide" : "")}
-
           <calcite-button
             width="full"
             slot="footer"
@@ -123,11 +124,11 @@ class Player extends Widget<PlayerProperties> {
   private renderStaging(classString: string) {
     return (
       <calcite-block open class={classString}>
-        <calcite-loader
+        {/* <calcite-loader
           label="Animation starting"
           text="Animation starting"
           class="player-loader"
-        ></calcite-loader>
+        ></calcite-loader> */}
 
         <calcite-notice open icon="information" scale="s">
           <div slot="message">
@@ -135,145 +136,6 @@ class Player extends Widget<PlayerProperties> {
           </div>
         </calcite-notice>
       </calcite-block>
-    );
-  }
-
-  private renderSettings(classString: string) {
-    const speedFactor = this.store.speedFactor;
-    let speedFactorLabel;
-    if (speedFactor === 1) {
-      speedFactorLabel = "normal";
-    } else if (speedFactor < 1) {
-      speedFactorLabel = `${1 / speedFactor}x slower`;
-    } else {
-      speedFactorLabel = `${speedFactor}x faster`;
-    }
-
-    const disablePause = this.store.transition === "linear";
-
-    const pauseValue =
-      this.store.transition === "linear"
-        ? "None"
-        : this.store.pauseBetweenSlides;
-    const pauseOptions = ["None", "Short", "Long"].map((option) => ({
-      value: option,
-      checked: option === pauseValue,
-    }));
-
-    const waitForUpdates =
-      this.store.transition !== "linear" && this.store.waitForUpdates;
-
-    return (
-      <div class={classString}>
-        <calcite-block
-          collapsible
-          heading="Animation"
-          description="Adjust speed and transitions"
-        >
-          <calcite-icon scale="s" slot="icon" icon="effects"></calcite-icon>
-
-          <calcite-label>
-            Speed ({speedFactorLabel})
-            <calcite-slider
-              value={this.selectedSpeedFactor}
-              min="0"
-              label-handles
-              max={SPEED_FACTORS.length - 1}
-              ticks="1"
-              onCalciteSliderInput={(e: any) =>
-                (this.selectedSpeedFactor = e.target.value)
-              }
-            ></calcite-slider>
-          </calcite-label>
-
-          <calcite-label>
-            Transitions
-            <calcite-radio-button-group
-              name="Transition"
-              layout="horizontal"
-              onCalciteRadioButtonChange={(e: any) => {
-                this.store.transition = e.target.value;
-              }}
-            >
-              <calcite-label layout="inline">
-                <calcite-radio-button
-                  value="bounce"
-                  checked
-                ></calcite-radio-button>
-                Bounce
-              </calcite-label>
-              <calcite-label layout="inline">
-                <calcite-radio-button value="linear"></calcite-radio-button>
-                Linear
-              </calcite-label>
-            </calcite-radio-button-group>
-          </calcite-label>
-
-          <calcite-label>
-            Pause between slides
-            <calcite-segmented-control
-              width="full"
-              onCalciteSegmentedControlChange={(e: any) => {
-                this.store.pauseBetweenSlides = e.target.value;
-              }}
-              disabled={disablePause}
-            >
-              {pauseOptions.map((option) => (
-                <calcite-segmented-control-item
-                  value={option.value}
-                  checked={option.checked}
-                >
-                  {option.value}
-                </calcite-segmented-control-item>
-              ))}
-            </calcite-segmented-control>
-          </calcite-label>
-
-          <calcite-label layout="inline-space-between">
-            Wait for view to update
-            <calcite-switch
-              onCalciteSwitchChange={(e: any) => {
-                this.store.waitForUpdates = !this.store.waitForUpdates;
-              }}
-              checked={waitForUpdates}
-              disabled={disablePause}
-            ></calcite-switch>
-          </calcite-label>
-        </calcite-block>
-
-        <calcite-block
-          collapsible
-          heading="Settings"
-          description="Change visuals"
-        >
-          <calcite-icon scale="s" slot="icon" icon="gear"></calcite-icon>
-
-          <calcite-label layout="inline-space-between">
-            High quality
-            <calcite-switch
-              onCalciteSwitchChange={(e: any) => {
-                this.quality = e.target.checked ? "high" : "medium";
-              }}
-            ></calcite-switch>
-          </calcite-label>
-
-          <calcite-label>
-            Camera angle ({Math.floor(this.store.fov)}°)
-            <calcite-slider
-              value={this.store.fov}
-              min="1"
-              label-handles
-              label-ticks
-              max="165"
-              ticks="54"
-              precise
-              onCalciteSliderInput={(e: any) => {
-                this.store.fov = e.target.value;
-              }}
-            ></calcite-slider>
-          </calcite-label>
-        </calcite-block>
-      </div>
     );
   }
 }
