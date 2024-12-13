@@ -6,6 +6,10 @@ import {
 import { tsx } from "@arcgis/core/widgets/support/widget";
 
 import { ArcgisSceneCustomEvent } from "@arcgis/map-components";
+import "@arcgis/map-components/dist/components/arcgis-fullscreen";
+import "@arcgis/map-components/dist/components/arcgis-placement";
+import "@arcgis/map-components/dist/components/arcgis-scene";
+
 import AppStore, { ActionMenu } from "../stores/AppStore";
 import SlidesPanel from "./SlidesPanel";
 import { Widget } from "./Widget";
@@ -66,7 +70,11 @@ class App extends Widget<AppProperties> {
               onArcgisViewReadyChange={(e: ArcgisSceneCustomEvent<void>) =>
                 this.bindView(e.target)
               }
-            ></arcgis-scene>
+            >
+              <arcgis-placement position="top-right">
+                <arcgis-Fullscreen></arcgis-Fullscreen>
+              </arcgis-placement>
+            </arcgis-scene>
           </calcite-panel>
         </calcite-shell>
       </div>
