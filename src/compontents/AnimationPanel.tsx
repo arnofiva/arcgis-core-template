@@ -3,7 +3,13 @@ import AppStore from "../stores/AppStore";
 
 const SPEED_FACTORS = [0.1, 0.2, 0.5, 1, 2, 3, 5];
 
-const AnimationPanel = ({ store: appStore }: { store: AppStore }) => {
+const AnimationPanel = ({
+  store: appStore,
+  onclose,
+}: {
+  store: AppStore;
+  onclose: () => void;
+}) => {
   const store = appStore.playerStore;
 
   const speedFactor = store.speedFactor;
@@ -35,9 +41,7 @@ const AnimationPanel = ({ store: appStore }: { store: AppStore }) => {
       heading="Animation"
       description="Adjust speed and transitions"
       closable
-      onCalcitePanelClose={() => {
-        appStore.selectedMenu = null;
-      }}
+      onCalcitePanelClose={onclose}
     >
       <calcite-block open>
         <calcite-label>
@@ -66,12 +70,15 @@ const AnimationPanel = ({ store: appStore }: { store: AppStore }) => {
             <calcite-label layout="inline">
               <calcite-radio-button
                 value="bounce"
-                checked
+                checked={store.transition === "bounce"}
               ></calcite-radio-button>
               Bounce
             </calcite-label>
             <calcite-label layout="inline">
-              <calcite-radio-button value="linear"></calcite-radio-button>
+              <calcite-radio-button
+                value="linear"
+                checked={store.transition === "linear"}
+              ></calcite-radio-button>
               Linear
             </calcite-label>
           </calcite-radio-button-group>

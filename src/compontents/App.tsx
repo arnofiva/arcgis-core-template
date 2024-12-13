@@ -5,13 +5,14 @@ import {
 
 import { tsx } from "@arcgis/core/widgets/support/widget";
 
-import { watch } from "@arcgis/core/core/reactiveUtils";
 import { ArcgisSceneCustomEvent } from "@arcgis/map-components";
-import AppStore from "../stores/AppStore";
-import Player from "./Player";
+import AppStore, { ActionMenu } from "../stores/AppStore";
+import SlidesPanel from "./SlidesPanel";
 import { Widget } from "./Widget";
 
 import "@esri/calcite-components/dist/components/calcite-action";
+import "@esri/calcite-components/dist/components/calcite-action-group";
+import "@esri/calcite-components/dist/components/calcite-action-pad";
 import "@esri/calcite-components/dist/components/calcite-button";
 import "@esri/calcite-components/dist/components/calcite-menu";
 import "@esri/calcite-components/dist/components/calcite-menu-item";
@@ -21,7 +22,6 @@ import "@esri/calcite-components/dist/components/calcite-navigation-user";
 import AnimationPanel from "./AnimationPanel";
 import SettingsPanel from "./SettingsPanel";
 
-// type AppProperties = Pick<App, "store">;
 type AppProperties = {};
 
 const params = new URLSearchParams(document.location.search.slice(1));
@@ -37,25 +37,6 @@ class App extends Widget<AppProperties> {
   private bindView(arcgisScene: HTMLArcgisSceneElement) {
     const view = arcgisScene.view;
     this.store.sceneStore.view = view;
-
-    const player = new Player({
-      store: this.store.playerStore,
-    });
-
-    view.ui.add(player, "bottom-right");
-
-    this.addHandles(
-      watch(
-        () => this.store && this.store.playerStore.state,
-        (state) => {
-          if (state === "animating") {
-            player.visible = false;
-          } else if (state === "ready") {
-            player.visible = true;
-          }
-        },
-      ),
-    );
   }
 
   render() {
@@ -63,23 +44,29 @@ class App extends Widget<AppProperties> {
 
     return (
       <div>
-        <calcite-shell>
+        <calcite-shell class="app-shell">
           <AppNavigation store={store}></AppNavigation>
-          <div slot="header">{/* <Header store={this.store}></Header> */}</div>
 
-          <AppMenu store={store}></AppMenu>
+          <calcite-shell-panel slot="panel-start" collapsed>
+            <AppMenu store={store}></AppMenu>
+          </calcite-shell-panel>
 
           <calcite-panel>
-            <calcite-shell content-behind="true">
-              <AppPanel store={store}></AppPanel>
-
-              <arcgis-scene
-                item-id={this.webSceneId}
-                onArcgisViewReadyChange={(e: ArcgisSceneCustomEvent<void>) =>
-                  this.bindView(e.target)
-                }
-              ></arcgis-scene>
+            <calcite-shell content-behind="true" class="scene-shell">
+              <calcite-shell-panel
+                slot="panel-start"
+                display-mode="float"
+                position="end"
+              >
+                <AppPanel store={store}></AppPanel>
+              </calcite-shell-panel>
             </calcite-shell>
+            <arcgis-scene
+              item-id={this.webSceneId}
+              onArcgisViewReadyChange={(e: ArcgisSceneCustomEvent<void>) =>
+                this.bindView(e.target)
+              }
+            ></arcgis-scene>
           </calcite-panel>
         </calcite-shell>
       </div>
@@ -109,13 +96,21 @@ const AppNavigation = ({ store }: { store: AppStore }) => {
         }}
       ></calcite-navigation-logo>
 
+      <calcite-button
+        width="full"
+        slot="content-center"
+        icon-start="video-web"
+        style="align-self: center;"
+        disabled={store.playerStore.state === "loading"}
+        onclick={() => store.playerStore.play()}
+        // class={animating ? "hide" : ""}
+      >
+        Animate slides
+      </calcite-button>
+
       {user ? (
         <calcite-navigation-user
           slot="user"
-          // active={this.userMenuOpen}
-          // onclick={() => {
-          //   this.userMenuOpen = !this.userMenuOpen;
-          // }}
           thumbnail={user.thumbnailUrl}
           full-name={user.fullName}
           username={user.username}
@@ -135,7 +130,7 @@ const AppNavigation = ({ store }: { store: AppStore }) => {
 };
 
 const AppMenu = ({ store }: { store: AppStore }) => {
-  const toggleMenu = (menu: "animation" | "settings") => {
+  const toggleMenu = (menu: ActionMenu) => {
     if (store.selectedMenu === menu) {
       store.selectedMenu = null;
     } else {
@@ -144,46 +139,55 @@ const AppMenu = ({ store }: { store: AppStore }) => {
   };
 
   return (
-    <calcite-shell-panel
-      slot="panel-start"
-      collapsed
-      display-mode="float-content"
-    >
-      <calcite-action-bar slot="action-bar" class="calcite-mode-dark">
-        <calcite-action
-          icon="effects"
-          text="Animation"
-          active={store.selectedMenu === "animation"}
-          onclick={() => toggleMenu("animation")}
-        ></calcite-action>
-        <calcite-action
-          icon="gear"
-          text="Settings"
-          active={store.selectedMenu === "settings"}
-          onclick={() => toggleMenu("settings")}
-        ></calcite-action>
-      </calcite-action-bar>
-    </calcite-shell-panel>
+    <calcite-action-bar slot="action-bar" class="calcite-mode-dark">
+      <calcite-action
+        icon="presentation"
+        text="Slides"
+        active={store.selectedMenu === "slides"}
+        onclick={() => toggleMenu("slides")}
+      ></calcite-action>
+      <calcite-action
+        icon="effects"
+        text="Animation"
+        active={store.selectedMenu === "animation"}
+        onclick={() => toggleMenu("animation")}
+      ></calcite-action>
+      <calcite-action
+        icon="gear"
+        text="Settings"
+        active={store.selectedMenu === "settings"}
+        onclick={() => toggleMenu("settings")}
+      ></calcite-action>
+    </calcite-action-bar>
   );
 };
 
 const AppPanel = ({ store }: { store: AppStore }) => {
-  const SelectedAppPanel = () => {
-    switch (store.selectedMenu) {
-      case "animation":
-        return <AnimationPanel store={store}></AnimationPanel>;
-      case "settings":
-        return <SettingsPanel store={store}></SettingsPanel>;
-      default:
-        return <div></div>;
-    }
-  };
-
-  return (
-    <calcite-shell-panel slot="panel-start" display-mode="float">
-      <SelectedAppPanel></SelectedAppPanel>
-    </calcite-shell-panel>
-  );
+  switch (store.selectedMenu) {
+    case "slides":
+      return (
+        <SlidesPanel
+          store={store.playerStore}
+          onclose={() => (store.selectedMenu = null)}
+        ></SlidesPanel>
+      );
+    case "animation":
+      return (
+        <AnimationPanel
+          store={store}
+          onclose={() => (store.selectedMenu = null)}
+        ></AnimationPanel>
+      );
+    case "settings":
+      return (
+        <SettingsPanel
+          store={store}
+          onclose={() => (store.selectedMenu = null)}
+        ></SettingsPanel>
+      );
+    default:
+      return <div></div>;
+  }
 };
 
 export default App;

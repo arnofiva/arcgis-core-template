@@ -1,11 +1,9 @@
 import Accessor from "@arcgis/core/core/Accessor";
-import Collection from "@arcgis/core/core/Collection";
 import {
   property,
   subclass,
 } from "@arcgis/core/core/accessorSupport/decorators";
 import { when, whenOnce } from "@arcgis/core/core/reactiveUtils";
-import SceneView from "@arcgis/core/views/SceneView";
 import Slide from "@arcgis/core/webscene/Slide";
 import { timeout } from "../utils";
 import SceneStore from "./SceneStore";
@@ -17,9 +15,6 @@ class PlayerStore extends Accessor {
   @property({ constructOnly: true })
   sceneStore: SceneStore;
 
-  @property({ aliasOf: "sceneStore.view" })
-  view: SceneView | null;
-
   @property()
   get state() {
     const state = this._state;
@@ -27,7 +22,7 @@ class PlayerStore extends Accessor {
   }
 
   @property()
-  slides: Collection<Slide> | null = null;
+  slides: Slide[] = [];
 
   @property()
   currentSlide = -1;
@@ -46,11 +41,11 @@ class PlayerStore extends Accessor {
 
   @property()
   get fov() {
-    const camera = this.view?.camera;
+    const camera = this.sceneStore.view?.camera;
     return (camera && camera.fov) || 0;
   }
   set fov(value: number) {
-    const view = this.view;
+    const view = this.sceneStore.view;
     const camera = view?.camera;
     if (view && camera) {
       const newCamera = camera.clone();
@@ -71,18 +66,31 @@ class PlayerStore extends Accessor {
   }
 
   @property()
-  private _state: "ready" | "start-animation" | "animating" = "ready";
+  private _state: "loading" | "ready" | "starting" | "animating" = "loading";
 
   private _stopAnimation = () => {};
 
   constructor(props: PlayerStoreProperties) {
     super(props);
 
-    whenOnce(() => this.slides).then((slides) => {
-      if (slides.length) {
-        this.reset(false);
-      }
-    });
+    const { sceneStore } = props;
+
+    this.addHandles(
+      when(
+        () => sceneStore.map,
+        async (map) => {
+          await map.loadAll();
+
+          const slides = map.presentation.slides;
+
+          if (slides && slides.length) {
+            this.slides = slides.toArray();
+            this.reset(false);
+            this.stop();
+          }
+        },
+      ),
+    );
 
     const listener = (e: KeyboardEvent) => {
       if (e.key === " ") {
@@ -94,13 +102,11 @@ class PlayerStore extends Accessor {
 
     this.addHandles([
       when(
-        () => this.view?.interacting,
+        () => sceneStore.view?.interacting,
         () => this.stop(),
       ),
       { remove: () => window.removeEventListener("keydown", listener) },
     ]);
-
-    (window as any)["player"] = this;
   }
 
   private async pauseFor(milliseconds: number) {
@@ -110,7 +116,7 @@ class PlayerStore extends Accessor {
 
     const waitConditions: Promise<any>[] = [];
     if (this.waitForUpdates) {
-      waitConditions.push(whenOnce(() => !this.view?.updating));
+      waitConditions.push(whenOnce(() => !this.sceneStore.view?.updating));
     }
 
     switch (this.pauseBetweenSlides) {
@@ -131,14 +137,14 @@ class PlayerStore extends Accessor {
       return;
     }
 
-    this._state = "start-animation";
+    this._state = "starting";
 
     let animating = true;
     this._stopAnimation = () => {
       if (animating) {
         this._state = "ready";
         animating = false;
-        const animation = this.view?.animation;
+        const animation = this.sceneStore.view?.animation;
         if (animation) {
           animation.stop();
         }
@@ -193,13 +199,13 @@ class PlayerStore extends Accessor {
   }
 
   async goToSlide(slideIndex: number, animate = true) {
-    const view = this.view;
+    const view = this.sceneStore.view;
     const slides = this.slides;
     if (!view || !slides || slideIndex < 0 || slideIndex >= slides.length) {
       return Promise.reject();
     }
 
-    const slide = slides.getItemAt(slideIndex);
+    const slide = slides[slideIndex];
 
     this.currentSlide = slideIndex;
     const speedFactor = this.speedFactor;
@@ -209,7 +215,6 @@ class PlayerStore extends Accessor {
     };
     if (this.transition === "linear") {
       options.easing = "linear";
-      console.log({ options });
     }
     try {
       await slide.applyTo(view, options);

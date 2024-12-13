@@ -1,7 +1,13 @@
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import AppStore from "../stores/AppStore";
 
-const SettingsPanel = ({ store: appStore }: { store: AppStore }) => {
+const SettingsPanel = ({
+  store: appStore,
+  onclose,
+}: {
+  store: AppStore;
+  onclose: () => void;
+}) => {
   const store = appStore.playerStore;
 
   const selectQualityProfile = (high: boolean) => {
@@ -15,11 +21,9 @@ const SettingsPanel = ({ store: appStore }: { store: AppStore }) => {
     <calcite-panel
       key="settings-panel"
       heading="Settings"
-      description="Scene specific configuration"
+      description="Scene rendering"
       closable
-      onCalcitePanelClose={() => {
-        appStore.selectedMenu = null;
-      }}
+      onCalcitePanelClose={onclose}
     >
       <calcite-block open>
         <calcite-label layout="inline-space-between">

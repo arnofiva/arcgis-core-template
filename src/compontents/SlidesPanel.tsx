@@ -9,7 +9,11 @@ import "@esri/calcite-components/dist/components/calcite-action";
 import "@esri/calcite-components/dist/components/calcite-block";
 import "@esri/calcite-components/dist/components/calcite-block-section";
 import "@esri/calcite-components/dist/components/calcite-button";
+import "@esri/calcite-components/dist/components/calcite-card";
+import "@esri/calcite-components/dist/components/calcite-card-group";
 import "@esri/calcite-components/dist/components/calcite-label";
+import "@esri/calcite-components/dist/components/calcite-list";
+import "@esri/calcite-components/dist/components/calcite-list-item";
 import "@esri/calcite-components/dist/components/calcite-notice";
 import "@esri/calcite-components/dist/components/calcite-pagination";
 import "@esri/calcite-components/dist/components/calcite-panel";
@@ -24,21 +28,66 @@ import { watch } from "@arcgis/core/core/reactiveUtils";
 import PlayerStore from "../stores/PlayerStore";
 import { Widget } from "./Widget";
 
-type PlayerProperties = Pick<Player, "store">;
-
 const SPEED_FACTORS = [0.1, 0.2, 0.5, 1, 2, 3, 5];
 
+const SlidesPanel = ({
+  store,
+  onclose,
+}: {
+  store: PlayerStore;
+  onclose: () => void;
+}) => {
+  const slides = store.slides;
+
+  return (
+    <calcite-panel
+      key="slides-panel"
+      heading="Slides"
+      description="Select animation start"
+      closable
+      onCalcitePanelClose={onclose}
+    >
+      <calcite-list
+        selection-mode="single"
+        // selection-appearance="icon"
+        selection-appearance="border"
+        style="max-height: 400px;"
+      >
+        {slides.map((s, i) => {
+          return (
+            <calcite-list-item
+              key={`slide-${i}`}
+              label={s.title.text}
+              description={s.description.text}
+              selected={i === store.currentSlide}
+              onclick={() => store.goToSlide(i)}
+            >
+              <div
+                slot="content-start"
+                class="list-item-slide"
+                style={`--bg-image: url('${s.thumbnail.url}');`}
+              ></div>
+            </calcite-list-item>
+          );
+        })}
+      </calcite-list>
+    </calcite-panel>
+  );
+};
+
+export default SlidesPanel;
+
 @subclass("arcgis-core-template.Player")
-class Player extends Widget<PlayerProperties> {
+class BPlayer extends Widget<{}> {
   @property()
   store: PlayerStore;
 
   @property()
   get quality() {
-    return this.store.view?.qualityProfile || "medium";
+    return this.store.sceneStore.view?.qualityProfile || "medium";
   }
   set quality(quality: "high" | "medium" | "low") {
-    const view = this.store.view;
+    const view = this.store.sceneStore.view;
     if (view) {
       view.qualityProfile = quality;
     }
@@ -124,12 +173,6 @@ class Player extends Widget<PlayerProperties> {
   private renderStaging(classString: string) {
     return (
       <calcite-block open class={classString}>
-        {/* <calcite-loader
-          label="Animation starting"
-          text="Animation starting"
-          class="player-loader"
-        ></calcite-loader> */}
-
         <calcite-notice open icon="information" scale="s">
           <div slot="message">
             Interrupt by pressing space bar or interacting with scene.
@@ -139,5 +182,3 @@ class Player extends Widget<PlayerProperties> {
     );
   }
 }
-
-export default Player;

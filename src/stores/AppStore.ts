@@ -8,7 +8,7 @@ import PlayerStore from "./PlayerStore";
 import SceneStore from "./SceneStore";
 import UserStore from "./UserStore";
 
-type ActionMenu = "animation" | "settings";
+export type ActionMenu = "animation" | "slides" | "settings";
 
 @subclass()
 class AppStore extends Accessor {
@@ -32,10 +32,6 @@ class AppStore extends Accessor {
     whenOnce(() => this.sceneStore.map).then(async (map) => {
       await map.load();
       document.title = map.portalItem.title;
-
-      await map.loadAll();
-
-      this.playerStore.slides = map.presentation.slides;
     });
   }
 }
