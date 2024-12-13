@@ -9,9 +9,9 @@ const SettingsPanel = ({
   onclose: () => void;
 }) => {
   const store = appStore.playerStore;
+  const view = appStore.sceneStore.view;
 
   const selectQualityProfile = (high: boolean) => {
-    const view = store.view;
     if (view) {
       view.qualityProfile = high ? "high" : "medium";
     }
@@ -29,7 +29,7 @@ const SettingsPanel = ({
         <calcite-label layout="inline-space-between">
           High quality
           <calcite-switch
-            checked={store.view?.qualityProfile === "high"}
+            checked={view?.qualityProfile === "high"}
             onCalciteSwitchChange={(e: any) =>
               selectQualityProfile(e.target.checked)
             }
