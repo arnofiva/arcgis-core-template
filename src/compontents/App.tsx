@@ -23,6 +23,7 @@ import "@esri/calcite-components/dist/components/calcite-menu-item";
 import "@esri/calcite-components/dist/components/calcite-navigation";
 import "@esri/calcite-components/dist/components/calcite-navigation-logo";
 import "@esri/calcite-components/dist/components/calcite-navigation-user";
+import PlayerStore from "../stores/PlayerStore";
 import AnimationPanel from "./AnimationPanel";
 import SettingsPanel from "./SettingsPanel";
 
@@ -57,11 +58,7 @@ class App extends Widget<AppProperties> {
 
           <calcite-panel>
             <calcite-shell content-behind="true" class="scene-shell">
-              <calcite-shell-panel
-                slot="panel-start"
-                display-mode="float"
-                position="end"
-              >
+              <calcite-shell-panel slot="panel-start" display-mode="float">
                 <AppPanel store={store}></AppPanel>
               </calcite-shell-panel>
             </calcite-shell>
@@ -104,17 +101,7 @@ const AppNavigation = ({ store }: { store: AppStore }) => {
         }}
       ></calcite-navigation-logo>
 
-      <calcite-button
-        width="full"
-        slot="content-center"
-        icon-start="video-web"
-        style="align-self: center;"
-        disabled={store.playerStore.state === "loading"}
-        onclick={() => store.playerStore.play()}
-        // class={animating ? "hide" : ""}
-      >
-        Animate slides
-      </calcite-button>
+      <Player store={store.playerStore}></Player>
 
       {user ? (
         <calcite-navigation-user
@@ -135,6 +122,39 @@ const AppNavigation = ({ store }: { store: AppStore }) => {
       )}
     </calcite-navigation>
   );
+};
+
+const Player = ({ store }: { store: PlayerStore }) => {
+  if (store.state === "starting") {
+    return (
+      <calcite-button
+        key="cancel"
+        appearance="outline"
+        kind="neutral"
+        slot="content-center"
+        style="align-self: center;"
+        loading
+        onclick={() => store.stop()}
+      >
+        Starting - press to cancel
+      </calcite-button>
+    );
+  } else if (store.state !== "animating") {
+    return (
+      <calcite-button
+        key="start"
+        slot="content-center"
+        icon-start="video-web"
+        style="align-self: center;"
+        disabled={store.state === "loading"}
+        onclick={() => store.play()}
+      >
+        Animate slides
+      </calcite-button>
+    );
+  } else {
+    return [];
+  }
 };
 
 const AppMenu = ({ store }: { store: AppStore }) => {
