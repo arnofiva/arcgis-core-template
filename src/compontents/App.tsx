@@ -23,8 +23,8 @@ import "@esri/calcite-components/dist/components/calcite-menu-item";
 import "@esri/calcite-components/dist/components/calcite-navigation";
 import "@esri/calcite-components/dist/components/calcite-navigation-logo";
 import "@esri/calcite-components/dist/components/calcite-navigation-user";
-import PlayerStore from "../stores/PlayerStore";
 import AnimationPanel from "./AnimationPanel";
+import Navigation from "./Navigation";
 import SettingsPanel from "./SettingsPanel";
 
 type AppProperties = {};
@@ -50,7 +50,7 @@ class App extends Widget<AppProperties> {
     return (
       <div>
         <calcite-shell class="app-shell">
-          <AppNavigation store={store}></AppNavigation>
+          <Navigation store={store}></Navigation>
 
           <calcite-shell-panel slot="panel-start" collapsed>
             <AppMenu store={store}></AppMenu>
@@ -78,84 +78,6 @@ class App extends Widget<AppProperties> {
     );
   }
 }
-
-const AppNavigation = ({ store }: { store: AppStore }) => {
-  const portalItem = store.sceneStore.map?.portalItem;
-  const itemPageUrl = portalItem?.itemPageUrl;
-
-  const userStore = store?.userStore;
-
-  const user = (userStore?.authenticated && userStore?.user) || null;
-
-  return (
-    <calcite-navigation slot="header">
-      <calcite-navigation-logo
-        slot="logo"
-        heading={portalItem?.title}
-        description="ArcGIS Maps SDK for JavaScript"
-        thumbnail="./icon-64.svg"
-        onclick={() => {
-          if (itemPageUrl) {
-            window.open(itemPageUrl, "new");
-          }
-        }}
-      ></calcite-navigation-logo>
-
-      <Player store={store.playerStore}></Player>
-
-      {user ? (
-        <calcite-navigation-user
-          slot="user"
-          thumbnail={user.thumbnailUrl}
-          full-name={user.fullName}
-          username={user.username}
-        ></calcite-navigation-user>
-      ) : (
-        <calcite-menu slot="content-end">
-          <calcite-menu-item
-            onclick={() => userStore?.signIn()}
-            text="Sign in"
-            icon-start="user"
-            text-enabled
-          ></calcite-menu-item>
-        </calcite-menu>
-      )}
-    </calcite-navigation>
-  );
-};
-
-const Player = ({ store }: { store: PlayerStore }) => {
-  if (store.state === "starting") {
-    return (
-      <calcite-button
-        key="cancel"
-        appearance="outline"
-        kind="neutral"
-        slot="content-center"
-        style="align-self: center;"
-        loading
-        onclick={() => store.stop()}
-      >
-        Starting - press to cancel
-      </calcite-button>
-    );
-  } else if (store.state !== "animating") {
-    return (
-      <calcite-button
-        key="start"
-        slot="content-center"
-        icon-start="video-web"
-        style="align-self: center;"
-        disabled={store.state === "loading"}
-        onclick={() => store.play()}
-      >
-        Animate slides
-      </calcite-button>
-    );
-  } else {
-    return [];
-  }
-};
 
 const AppMenu = ({ store }: { store: AppStore }) => {
   const toggleMenu = (menu: ActionMenu) => {
